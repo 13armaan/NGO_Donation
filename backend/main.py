@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from supabase_client import supabase
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
 
 app=FastAPI()
 
@@ -53,3 +54,25 @@ def Login(data:LoginData):
         "role":user["role"],
         "email":user["email"]
     }
+
+class donationData(BaseModel):
+    amount:int
+    user_id:int
+    status:str
+    
+
+@app.post("/donate")
+def Donation(data:donationData):
+    res=supabase.table("donations").insert({
+        "user_id":data.user_id,
+        "status":"pending",
+        
+        "amount":data.amount
+    }).execute()
+    
+    return{
+        "message":"Donation created",
+        "donation_id":res.data[0]["id"]
+    }
+        
+        
