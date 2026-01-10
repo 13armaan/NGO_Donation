@@ -1,9 +1,11 @@
 import {useState} from "react";
+import { useNavigate } from "react-router-dom";
 
 function Register(){
     const[email, setEmail]=useState("");
     const[password, setPassword]=useState("");
     const[role, setRole]=useState("user");
+    const nav=useNavigate();
 
     async function handleRegister(){
     const res=await fetch("http://127.0.0.1:8000/register",{
@@ -43,6 +45,7 @@ function Register(){
         <br />
     
         <button onClick={handleRegister}>Register</button>
+        <button onClick={()=>nav("/")}>Registered? Login here</button>
         </div>
     )
 }

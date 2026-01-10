@@ -30,3 +30,26 @@ def register(user:UserCreate):
         "role":user.role
     }).execute()
     return{"message":"registered"}
+
+class LoginData(BaseModel):
+    email:str
+    password:str
+
+@app.post("/login")
+def Login(data:LoginData):
+    res=supabase.table("users").select("*").eq("email",data.email).execute()
+
+    if len(res.data)==0:
+        return{"error":"user not found"}
+    
+    user=res.data[0]
+
+    if user["password"]!=data.password:
+        return{"error":"invalid password"}
+    
+    return{
+        "message":"Login success",
+        "user_id":user["id"],
+        "role":user["role"],
+        "email":user["email"]
+    }
