@@ -4,20 +4,21 @@ function Donate(){
     const[amount,setAmount]=useState("");
     const user=JSON.parse(localStorage.getItem("user"));
     
+    console.log(user.user_id);
     async function handleDonate(){
-        const res = await fetch("http://127.0.0.1:8000/register",{
+        const res = await fetch("http://127.0.0.1:8000/donate",{
             method:"POST",
             headers:{
-                "content-type":"application/json"
+                "Content-type":"application/json"
             },
             body:JSON.stringify({
-                user:user.user_id,
+                user_id:user.user_id,
                 amount:parseFloat(amount)
             })
         });
 
         const data=await res.json();
-        alert("Donation created with ID"+data.donation_id);
+        alert("Donation created with ID "+data.donation_id);
     }
     return(
         <div>

@@ -56,9 +56,9 @@ def Login(data:LoginData):
     }
 
 class donationData(BaseModel):
-    amount:int
+    amount:float
     user_id:int
-    status:str
+    
     
 
 @app.post("/donate")
@@ -72,7 +72,7 @@ def Donation(data:donationData):
     
     return{
         "message":"Donation created",
-        "donation_id":res.data[0]["id"]
+        "donation_id":res.data[0]["donation_id"]
     }
         
         

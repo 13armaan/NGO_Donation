@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Donate from "./pages/donate";
+import RequireAuth from "./components/RequireAuth";
 
 function App() {
  
@@ -14,9 +15,31 @@ function App() {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register/>}/>
-      <Route path="/dashboard" element={<UserDashboard />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/donate" element={<Donate/>}/>
+      <Route path="/dashboard" 
+      element={
+      <RequireAuth>
+        <UserDashboard />
+      </RequireAuth>
+      } />
+      <Route path="/admin" 
+       element={
+        <RequireAuth>
+          <AdminDashboard/>
+        </RequireAuth>
+        } />
+      <Route path="/donate" 
+       element={
+        <RequireAuth>
+          <Donate />
+        </RequireAuth>
+        } />
+      <Route path="donation_history" 
+      element={
+        <UserDashboard>
+          <D/>
+        </UserDashboard>
+      }
+      />
     </Routes>
   </BrowserRouter>
 );
