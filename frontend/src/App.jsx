@@ -6,7 +6,7 @@ import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Donate from "./pages/donate";
 import RequireAuth from "./components/RequireAuth";
-
+import History from "./pages/donation_history";
 function App() {
  
 
@@ -33,11 +33,11 @@ function App() {
           <Donate />
         </RequireAuth>
         } />
-      <Route path="donation_history" 
+      <Route path="/history" 
       element={
-        <UserDashboard>
-          <D/>
-        </UserDashboard>
+        <RequireAuth>
+          <History />
+        </RequireAuth>
       }
       />
     </Routes>

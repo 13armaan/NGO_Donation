@@ -2,8 +2,8 @@ import { useNavigate } from "react-router-dom";
 
 function UserDashboard(){
     const nav=useNavigate();
-    const user=localStorage.getItem("user");
-
+    const user=JSON.parse(localStorage.getItem("user"));
+    console.log(user["user_id"]);
     return(
         <div>
             <h2>Welcome {user.email}</h2>
@@ -15,7 +15,7 @@ function UserDashboard(){
                 nav("/")
             }}>Log Out</button>
             
-            <button onClick={()=>nav("/donation_history")}>Your Donation History</button>
+            <button onClick={()=>nav("/history")}>Your Donation History</button>
         </div>
     );
 }

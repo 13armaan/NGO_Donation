@@ -75,4 +75,8 @@ def Donation(data:donationData):
         "donation_id":res.data[0]["donation_id"]
     }
         
-        
+@app.get("/my_donations/{user_id}")
+def my_donations(user_id:int):
+    res=supabase.table("donations").select("*").eq("user_id",user_id).order("donation_id",desc=True).execute()
+    return res.data
+  
