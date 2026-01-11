@@ -80,3 +80,37 @@ def my_donations(user_id:int):
     res=supabase.table("donations").select("*").eq("user_id",user_id).order("donation_id",desc=True).execute()
     return res.data
   
+@app.get("/admin/users")
+def users_in_admin():
+    res=supabase.table("users").select("id,email,role").execute()
+    return res.data
+
+@app.get("/admin/donations")
+def donations_in_admin():
+    res=supabase.table("donations").select("donation_id,amount,user_id,created_at").execute()
+    return res.data
+
+@app.get("/admin/stats")
+def get_stats():
+    res=supabase.table("donations").select("amount,status").execute()
+
+    total=0
+    success=0
+    pending=0
+    failed=0
+
+    for d in res.data:
+        if d["status"]=="success":
+            total+=d["amount"]
+            success+=1
+        elif d["status"]=="pending":
+            pending+=1
+        else:
+            failed+=1
+
+    return{
+        "Total Donated Amount":total,
+        "success":success,
+        "failed":failed,
+        "pending":pending
+    }
