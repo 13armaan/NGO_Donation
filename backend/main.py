@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from supabase_client import supabase
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
+from razorpay_client import razorpay
+from fastapi import Request
 
 app=FastAPI()
 
@@ -87,7 +89,7 @@ def users_in_admin():
 
 @app.get("/admin/donations")
 def donations_in_admin():
-    res=supabase.table("donations").select("donation_id,amount,user_id,created_at").execute()
+    res=supabase.table("donations").select("donation_id,amount,user_id,created_at,users(email),status").execute()
     return res.data
 
 @app.get("/admin/stats")
@@ -114,3 +116,46 @@ def get_stats():
         "failed":failed,
         "pending":pending
     }
+
+class CreatePaymentData(BaseModel):
+    donation_id:int
+    amount:float
+    
+@app.post("/create-payment")
+def payment(data:CreatePaymentData):
+    order = razorpay.order.create({
+        "amount":(data.amount)*100,
+        "currency":"INR",
+        "reciept":data.donation_id,
+
+    }) 
+    return{
+        "order_id":order["id"],
+        "amount":data.amount,
+        "currency":"INR",
+        "key":os.getenv("RAZORPAY_KEY_ID")
+    }
+
+@app.post("/razorpay-webhook")
+async def razorpay_webhook(request:Request):
+    payload=await request.body()
+    headers=request.headers
+
+    data=json.loads(payload)
+
+    event=data["event"]
+    order_id=data["payload"]["payment"]["entity"]["order_id"]
+
+    donation_id=data["payload"]["order"]["entity"]["receipt"]
+
+    if event=="payment.captured":
+        supabase.table("donations").update({
+            "status":"success"
+        }).eq("id",donation_id).execute()
+    
+    if event=="payment.failed":
+        supabase.table("donations").update({
+            "status":"failed"
+        }).eq("id",donation_id).execute()
+
+    return{"status":"ok"}

@@ -61,6 +61,7 @@ function AdminDashboard(){
                         <th>Amount</th>
                         <th>created at</th>
                         <th>Status</th>
+                        <th>user email</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,6 +71,7 @@ function AdminDashboard(){
                             <td>{d.amount}</td>
                             <td>{d.created_at ? new Date(d.created_at).toLocaleString(): "NA"}</td>
                             <td>{d.status}</td>
+                            <td>{d.users.email}</td>
                         </tr>
                     ))}
                 </tbody>
