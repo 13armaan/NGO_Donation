@@ -19,7 +19,12 @@ function Donate(){
 
         const data=await res.json();
         alert("Donation created with ID "+data.donation_id);
-        StartPayment(data.donation_id,amount);
+        const id=data.donation_id;
+        const amt=parseFloat(amount);
+        console.log("Sending:", { id,amt});
+        console.log(typeof id, id);
+
+        StartPayment(String(data.donation_id),parseFloat(amount));
     }
     return(
         <div>
@@ -37,10 +42,10 @@ function Donate(){
 async function StartPayment(donation_id,amount){
     const res=await fetch("http://127.0.0.1:8000/create-payment",{
     method:"POST",
-    headers:{ "Conetnt-Type": "application/json"},
+    headers:{"Content-Type":"application/json"},
     body: JSON.stringify({donation_id,amount})
     });
-
+    console.log("payment running");
     const data=await res.json();
 
     const options={
@@ -48,6 +53,7 @@ async function StartPayment(donation_id,amount){
         amount:data.amount*100,
         currency:"INR",
         name:"NGO Donations",
+        order_id: data.order_id,
         handler: function(){
             alert("payment processing ...")
         }

@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from supabase_client import supabase
@@ -6,6 +9,7 @@ from datetime import datetime
 from razorpay_client import razorpay
 from fastapi import Request
 
+load_dotenv()
 app=FastAPI()
 
 app.add_middleware(
@@ -118,7 +122,7 @@ def get_stats():
     }
 
 class CreatePaymentData(BaseModel):
-    donation_id:int
+    donation_id:str
     amount:float
     
 @app.post("/create-payment")
@@ -126,9 +130,10 @@ def payment(data:CreatePaymentData):
     order = razorpay.order.create({
         "amount":(data.amount)*100,
         "currency":"INR",
-        "reciept":data.donation_id,
+        
 
     }) 
+    print (os.getenv("RAZORPAY_KEY_ID"))
     return{
         "order_id":order["id"],
         "amount":data.amount,
