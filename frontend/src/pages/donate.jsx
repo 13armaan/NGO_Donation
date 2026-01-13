@@ -27,7 +27,12 @@ function Donate(){
         StartPayment(String(data.donation_id),parseFloat(amount));
     }
     return(
+      
+
         <div>
+              <div className="text-red-500 text-4xl font-bold">
+  Tailwind is alive
+</div>
             <h2>Donate</h2>
             
             <input
