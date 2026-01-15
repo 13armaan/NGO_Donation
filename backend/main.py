@@ -126,41 +126,49 @@ class CreatePaymentData(BaseModel):
     amount:float
     
 @app.post("/create-payment")
-def payment(data:CreatePaymentData):
+def payment(data: CreatePaymentData):
     order = razorpay.order.create({
-        "amount":(data.amount)*100,
-        "currency":"INR",
-        
+        "amount": int(data.amount * 100),
+        "currency": "INR",
+    })
 
-    }) 
-    print (os.getenv("RAZORPAY_KEY_ID"))
-    return{
-        "order_id":order["id"],
-        "amount":data.amount,
-        "currency":"INR",
-        "key":os.getenv("RAZORPAY_KEY_ID")
+    # 🔑 Store order id against donation
+    supabase.table("donations").update({
+        "razorpay_order_id": order["id"]
+    }).eq("donation_id", data.donation_id).execute()
+
+    return {
+        "order_id": order["id"],
+        "amount": data.amount,
+        "currency": "INR",
+        "key": os.getenv("RAZORPAY_KEY_ID"),
     }
 
-@app.post("/razorpay-webhook")
-async def razorpay_webhook(request:Request):
-    payload=await request.body()
-    headers=request.headers
+@app.post("/update-payment-status")
+async def update_payment_status(donation_id: str):
+    # Fetch the donation details from the database
+    donation = supabase.table("donations").select("*").eq("donation_id", donation_id).execute()
+    if not donation.data:
+        return {"error": "Donation not found"}
 
-    data=json.loads(payload)
+    # Extract the Razorpay order ID from the donation record
+    razorpay_order_id = donation.data[0]["razorpay_order_id"]
 
-    event=data["event"]
-    order_id=data["payload"]["payment"]["entity"]["order_id"]
+    # Fetch payment details from Razorpay
+    payment_details = razorpay.order.payments(razorpay_order_id)
 
-    donation_id=data["payload"]["order"]["entity"]["receipt"]
+    # Check the payment status
+    if payment_details["items"]:
+        payment_status = payment_details["items"][0]["status"]
 
-    if event=="payment.captured":
-        supabase.table("donations").update({
-            "status":"success"
-        }).eq("id",donation_id).execute()
-    
-    if event=="payment.failed":
-        supabase.table("donations").update({
-            "status":"failed"
-        }).eq("id",donation_id).execute()
+        # Update the donation status in the database
+        if payment_status == "captured":
+            supabase.table("donations").update({"status": "success"}).eq("donation_id", donation_id).execute()
+        elif payment_status == "failed":
+            supabase.table("donations").update({"status": "failed"}).eq("donation_id", donation_id).execute()
+        else:
+            supabase.table("donations").update({"status": "pending"}).eq("donation_id", donation_id).execute()
 
-    return{"status":"ok"}
+        return {"status": "updated", "payment_status": payment_status}
+
+    return {"error": "No payment details found"}

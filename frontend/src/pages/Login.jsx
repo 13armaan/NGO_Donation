@@ -33,25 +33,50 @@ async function handleLogin(){
 }
 }
 
-return(
-    <div>
-        <h2>Login</h2>
+return (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
+    <div className="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl">
+      <h2 className="text-2xl font-bold text-center mb-2 text-blue-800">
+        Welcome Back
+      </h2>
+
+      <p className="text-sm text-center text-blue-500 mb-6">
+        Login to your NGO dashboard
+      </p>
+
+      <div className="space-y-4">
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
         <input
-        placeholder="email"
-        onChange={(e)=>setEmail(e.target.value)}
+          type="password"
+          placeholder="Password"
+          className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+          onChange={(e) => setPassword(e.target.value)}
         />
-        <br/>
-        <input
-        placeholder="password"
-        onChange={(e)=>setPassword(e.target.value)}
-        />
-        <br/>
 
-        <button onClick={handleLogin}>Login</button>
-        <button onClick={()=>nav("/register")}>New user? Register</button>
+        <button
+          onClick={handleLogin}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+        >
+          Login
+        </button>
+
+        <button
+          onClick={() => nav("/register")}
+          className="w-full text-blue-600 font-medium hover:underline"
+        >
+          New user? Register
+        </button>
+      </div>
+      </div>
     </div>
-);
+  );
+
 }
 
 export default Login;

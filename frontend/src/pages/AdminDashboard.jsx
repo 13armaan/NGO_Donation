@@ -1,83 +1,72 @@
-import { useEffect,useState } from "react";
+import { useState, useEffect } from "react";
 
-function AdminDashboard(){
-    const[users,setUsers]=useState([]);
-    const[donations,setDonations]=useState([]);
-    const[stats,setStats]=useState({});
-    const user=JSON.parse(localStorage.getItem("user"));
-    
-    console.log(user.user_id);
+function AdminDashboard() {
+  const [users, setUsers] = useState([]);
+  const [donations, setDonations] = useState([]);
 
-    useEffect(()=>{
-        fetch("http://127.0.0.1:8000/admin/donations")
-        .then(res=>res.json())
-        .then(d=>setDonations(d));
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/admin/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
 
-        fetch("http://127.0.0.1:8000/admin/users")
-        .then(res=>res.json())
-        .then(d=>setUsers(d));
-        
-        fetch("http://127.0.0.1:8000/admin/stats")
-        .then(res=>res.json())
-        .then(d=>setStats(d));
-        
-    },[]);
+    fetch("http://127.0.0.1:8000/admin/donations")
+      .then((res) => res.json())
+      .then((data) => setDonations(data));
+  }, []);
 
-    return(
-        <div>
-            <h2>Admin Dashboard</h2>
-            <h3>Stats</h3>
-            <p>Total Amount Recieved: ${stats.total}</p>
-            <p>Total successful payments: ${stats.success}</p>
-            <p>Total Pending payments: ${stats.pending}</p>
-            <p>Total Failed Payments ${stats.failed}</p>
-            
-            <h3>Users</h3>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>User id</th>
-                        <th>email</th>
-                        <th>created at</th>
-                        <th>role</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Array.isArray(users) && users.map(u=>(
-                        <tr key={u.id}>
-                             <td>{u.id}</td>
-                            <td>{u.email}</td>
-                            <td>{u.created_at ? new Date(u.created_at).toLocaleString(): "NA"}</td>
-                            <td>{u.role}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            <h3>Donations</h3>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>User id</th>
-                        <th>Amount</th>
-                        <th>created at</th>
-                        <th>Status</th>
-                        <th>user email</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Array.isArray(donations) && donations.map(d=>(
-                        <tr key={d.donation_id}>
-                             <td>{d.user_id}</td>
-                            <td>{d.amount}</td>
-                            <td>{d.created_at ? new Date(d.created_at).toLocaleString(): "NA"}</td>
-                            <td>{d.status}</td>
-                            <td>{d.users.email}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-6">
+      <div className="max-w-6xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">Admin Dashboard</h2>
+
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold mb-4">Users</h3>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b text-gray-600">
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.user_id} className="border-b hover:bg-gray-50">
+                  <td className="p-3">{user.name}</td>
+                  <td className="p-3">{user.email}</td>
+                  <td className="p-3">{user.role}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-    );
 
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Donations</h3>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b text-gray-600">
+                <th className="p-3">Amount</th>
+                <th className="p-3">Date</th>
+                <th className="p-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {donations.map((donation) => (
+                <tr key={donation.donation_id} className="border-b hover:bg-gray-50">
+                  <td className="p-3">₹{donation.amount}</td>
+                  <td className="p-3">
+                    {new Date(donation.date).toLocaleDateString()}
+                  </td>
+                  <td className="p-3">{donation.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 }
+
 export default AdminDashboard;
