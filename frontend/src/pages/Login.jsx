@@ -7,6 +7,10 @@ const[password,setPassword]=useState("");
 const nav=useNavigate();
 
 async function handleLogin(){
+  if (!email.trim() || !password.trim()) {
+    alert("Please enter both email and password");
+    return;
+}
     const res = await fetch("http://127.0.0.1:8000/login",{
         method:"POST",
         headers:{

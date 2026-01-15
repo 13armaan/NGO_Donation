@@ -12,16 +12,12 @@ function App() {
 
   return (
   <BrowserRouter>
-  <div className="flex justify-between items-center mb-8">
-  <h1 className="text-2xl font-bold text-slate-800">
+ <div className="bg-white shadow-md rounded-xl px-6 py-4 mb-8 flex justify-between items-center">
+  <h1 className="text-2xl font-bold text-purple-800 tracking-wide">
     NGO Donations
   </h1>
 
-  <div className="flex gap-4 text-sm font-medium">
-    <a href="/" className="text-blue-600 hover:underline">Donate</a>
-    <a href="/history" className="text-blue-600 hover:underline">History</a>
-    <a href="/admin" className="text-blue-600 hover:underline">Admin</a>
-  </div>
+
 </div>
 
     <Routes>

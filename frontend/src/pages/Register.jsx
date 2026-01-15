@@ -9,6 +9,10 @@ function Register() {
   const nav = useNavigate();
 
   async function handleRegister() {
+    if (!email.trim() || !password.trim()) {
+      alert("Please enter both email and password");
+      return;
+  }
     const res = await fetch("http://127.0.0.1:8000/register", {
       method: "POST",
       headers: {

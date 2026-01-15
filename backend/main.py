@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from razorpay_client import razorpay
 from fastapi import Request
+from fastapi.responses import PlainTextResponse
+from datetime import datetime, timedelta
 
 load_dotenv()
 app=FastAPI()
@@ -25,6 +27,7 @@ def root():
     return {"status":"NGO backend running"}
 
 class UserCreate(BaseModel):
+    name:str
     email:str
     password:str
     role:str
@@ -34,7 +37,8 @@ def register(user:UserCreate):
     supabase.table("users").insert({
         "email":user.email,
         "password":user.password,
-        "role":user.role
+        "role":user.role,
+        "name":user.name
     }).execute()
     return{"message":"registered"}
 
@@ -88,7 +92,7 @@ def my_donations(user_id:int):
   
 @app.get("/admin/users")
 def users_in_admin():
-    res=supabase.table("users").select("id,email,role").execute()
+    res=supabase.table("users").select("id,email,role,name,created_at").execute()
     return res.data
 
 @app.get("/admin/donations")
@@ -99,7 +103,7 @@ def donations_in_admin():
 @app.get("/admin/stats")
 def get_stats():
     res=supabase.table("donations").select("amount,status").execute()
-
+    users = supabase.table("users").select("id").execute()
     total=0
     success=0
     pending=0
@@ -115,7 +119,8 @@ def get_stats():
             failed+=1
 
     return{
-        "Total Donated Amount":total,
+        "total_users": len(users.data),
+        "total_amount":total,
         "success":success,
         "failed":failed,
         "pending":pending
@@ -172,3 +177,63 @@ async def update_payment_status(donation_id: str):
         return {"status": "updated", "payment_status": payment_status}
 
     return {"error": "No payment details found"}
+
+@app.get("/admin/export/donations")
+def export_donations_csv():
+    res = supabase.table("donations") \
+        .select("donation_id,amount,status,created_at,users(email)") \
+        .execute()
+
+    csv = "donation_id,amount,status,created_at,email\n"
+
+    for d in res.data:
+        email = d["users"]["email"] if d["users"] else ""
+        csv += f'{d["donation_id"]},{d["amount"]},{d["status"]},{d["created_at"]},{email}\n'
+
+    return PlainTextResponse(csv)
+
+@app.get("/admin/export/users")
+def export_users_csv():
+    res = supabase.table("users").select("id,name,email,role,created_at").execute()
+
+    csv = "id,name,email,role,created_at\n"
+
+    for u in res.data:
+        csv += f'{u["id"]},{u["name"]},{u["email"]},{u["role"]},{u["created_at"]}\n'
+
+    return PlainTextResponse(csv)
+
+
+
+
+@app.get("/admin/users/filter")
+def filter_users(from_date: str = None, to_date: str = None):
+    query = supabase.table("users").select("id,name,email,role,created_at")
+
+    if from_date:
+        query = query.gte("created_at", from_date)
+
+    if to_date:
+        end_date = datetime.fromisoformat(to_date) + timedelta(days=1)
+        query = query.lt("created_at", end_date.isoformat())
+
+    return query.execute().data
+
+from datetime import datetime, timedelta
+
+@app.get("/admin/donations/filter")
+def filter_donations(min_amount: float = 0, from_date: str = None, to_date: str = None):
+    query = supabase.table("donations") \
+        .select("donation_id,amount,status,created_at,users(email)")
+
+    if min_amount > 0:
+        query = query.gte("amount", min_amount)
+
+    if from_date:
+        query = query.gte("created_at", from_date)
+
+    if to_date:
+        end_date = datetime.fromisoformat(to_date) + timedelta(days=1)
+        query = query.lt("created_at", end_date.isoformat())
+
+    return query.execute().data
