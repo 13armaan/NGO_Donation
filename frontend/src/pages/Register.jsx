@@ -23,7 +23,7 @@ function Register() {
       alert(data.error);
     } else {
       alert("Registration successful! Please log in.");
-      nav("/login");
+      nav("/");
     }
   }
 

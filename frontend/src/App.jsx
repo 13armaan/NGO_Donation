@@ -35,7 +35,7 @@ function App() {
       } />
       <Route path="/admin" 
        element={
-        <RequireAuth>
+        <RequireAuth role="admin">
           <AdminDashboard/>
         </RequireAuth>
         } />

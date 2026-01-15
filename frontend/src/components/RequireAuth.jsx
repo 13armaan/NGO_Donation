@@ -8,13 +8,14 @@ function RequireAuth({children,role}){
         alert("Please sign in first")
         return <Navigate to="/"/>;
     }
-    if(role && user.role!=role){
+    if(role && user.role!==role){
         console.log("role diff navigated to login page");
         alert("permission denied");
         
         return <Navigate to="/"/>;
     }
-    return children;
+     
+     else return children;
 }
 
 export default RequireAuth;
