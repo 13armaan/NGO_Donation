@@ -1,4 +1,8 @@
 import os
+import hmac
+import hashlib
+import json
+
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -7,6 +11,7 @@ from supabase_client import supabase
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from razorpay_client import razorpay
+from fastapi import  Header, HTTPException
 from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from datetime import datetime, timedelta
@@ -149,34 +154,7 @@ def payment(data: CreatePaymentData):
         "key": os.getenv("RAZORPAY_KEY_ID"),
     }
 
-@app.post("/update-payment-status")
-async def update_payment_status(donation_id: str):
-    # Fetch the donation details from the database
-    donation = supabase.table("donations").select("*").eq("donation_id", donation_id).execute()
-    if not donation.data:
-        return {"error": "Donation not found"}
 
-    # Extract the Razorpay order ID from the donation record
-    razorpay_order_id = donation.data[0]["razorpay_order_id"]
-
-    # Fetch payment details from Razorpay
-    payment_details = razorpay.order.payments(razorpay_order_id)
-
-    # Check the payment status
-    if payment_details["items"]:
-        payment_status = payment_details["items"][0]["status"]
-
-        # Update the donation status in the database
-        if payment_status == "captured":
-            supabase.table("donations").update({"status": "success"}).eq("donation_id", donation_id).execute()
-        elif payment_status == "failed":
-            supabase.table("donations").update({"status": "failed"}).eq("donation_id", donation_id).execute()
-        else:
-            supabase.table("donations").update({"status": "pending"}).eq("donation_id", donation_id).execute()
-
-        return {"status": "updated", "payment_status": payment_status}
-
-    return {"error": "No payment details found"}
 
 @app.get("/admin/export/donations")
 def export_donations_csv():
@@ -237,3 +215,81 @@ def filter_donations(min_amount: float = 0, from_date: str = None, to_date: str 
         query = query.lt("created_at", end_date.isoformat())
 
     return query.execute().data
+
+
+
+@app.post("/razorpay/webhook")
+async def razorpay_webhook(
+    request: Request,
+    x_razorpay_signature: str = Header(None)
+):
+    body = await request.body()
+
+    # 1️⃣ Verify signature
+    expected_signature = hmac.new(
+        os.getenv("RAZORPAY_WEBHOOK_SECRET").encode(),
+        body,
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_signature, x_razorpay_signature):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    payload = json.loads(body)
+    event = payload["event"]
+
+    payment = payload["payload"]["payment"]["entity"]
+    order_id = payment["order_id"]
+    status = payment["status"]  # captured / failed
+
+    # 2️⃣ Find donation using order_id
+    donation = supabase.table("donations") \
+        .select("donation_id") \
+        .eq("razorpay_order_id", order_id) \
+        .execute()
+
+    if not donation.data:
+        return {"message": "Donation not found"}
+
+    donation_id = donation.data[0]["donation_id"]
+
+    # 3️⃣ Update DB (FINAL TRUTH)
+    if status == "captured":
+        supabase.table("donations").update({
+            "status": "success"
+        }).eq("donation_id", donation_id).execute()
+
+    elif status == "failed":
+        supabase.table("donations").update({
+            "status": "failed"
+        }).eq("donation_id", donation_id).execute()
+
+    return {"status": "ok"}
+
+@app.post("/reconcile-pending")
+def reconcile_pending():
+    pending = supabase.table("donations") \
+        .select("*") \
+        .eq("status", "pending") \
+        .execute()
+
+    for d in pending.data:
+        order_id = d["razorpay_order_id"]
+        payments = razorpay.order.payments(order_id)
+
+        if not payments["items"]:
+            continue
+
+        status = payments["items"][0]["status"]
+
+        if status == "captured":
+            supabase.table("donations").update({
+                "status": "success"
+            }).eq("donation_id", d["donation_id"]).execute()
+
+        elif status == "failed":
+            supabase.table("donations").update({
+                "status": "failed"
+            }).eq("donation_id", d["donation_id"]).execute()
+
+    return {"message": "reconciled"}

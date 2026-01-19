@@ -106,12 +106,7 @@ async function StartPayment(donation_id, amount) {
   
     theme: { color: "#3399cc" },
   
-    handler: async function (response) {
-      await fetch(`http://127.0.0.1:8000/update-payment-status?donation_id=${donation_id}`, {
-        method: "POST",
-      });
-      alert("Payment complete");
-    }
+ 
   };
   
     
