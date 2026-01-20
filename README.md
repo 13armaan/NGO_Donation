@@ -18,7 +18,9 @@
 - [Contributing](#contributing)
 
 ---
-
+[Demo Video](https://drive.google.com/file/d/1o_VfOISPwOBVGEIGX_ZXxb_TCahuJLdF/view?usp=sharing)
+[Project Report](https://drive.google.com/file/d/1VTRX1y10RVzq3Y5A0n2ZWWDXpnIHNkXT/view?usp=sharing)
+---
 ## 🎯 Project Overview
 
 The **NGO Registration and Donation Management System** is a comprehensive web application designed to enable Non-Governmental Organizations (NGOs) to:
